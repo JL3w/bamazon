@@ -19,27 +19,17 @@ function start() {
     connection.query("SELECT * FROM products", function (err, res) {
         if (err) throw err
         else console.table(res, "\n");
-        prompt();
+        prompt(res);
     });
 };
 
-function prompt() {
-    var rows = connection.query("SELECT count(*) FROM products", function (err, res) {
-        if (err) throw err
-        else return res;
-    });
+function prompt(inventory) {
     inquirer
         .prompt([
             {
             name: "prodID",
             type: "input",
             message: "What is the id of the product you would like to purchase?",
-            validate: function(id) {
-                if (id <= rows) {
-                    return true;
-                    }
-                return false;
-                }
             },
             {
             name: "quantity",
@@ -47,27 +37,46 @@ function prompt() {
             message: "How many units of the product would you like to purchase?",
             }
         ]).then(function(answer) {
-            var query = "SELECT * FROM products WHERE item_id = ? and stock_quantity >= ? ";
-            connection.query(query, [answer.prodID, answer.quantity], function(err, res) {
-                if (err) throw err;
-
-                if (res.stock_quantity = null) {
-                    console.log("We do not have that product in that quantity");
-                }
-            
-                else { 
-                    connection.end();
-                    var newQuant = parseInt(res.stock_quantity - answer.quantity);
-                    var total = res.price * answer.quantity;
-                    var query = "UPDATE products SET stock_quantity=? WHERE item_id=?";
-                    
-                    connection.query(query, [newQuant, answer.prodID], function (err, res) {
-                        if (err) throw err;
-                        console.log("Your order has been placed at a total cost of " + total);
-                        });
-                    }
-            });
-            connection.end();
+            var itemId = parseInt(answer.prodID);
+            var itemQ = parseInt(answer.quantity);
+            var itemArrPos = itemId -1;
+            if (inventory[itemArrPos].stock_quantity >= itemQ) {
+                pullTrigger(itemId, itemQ);
+            }
+            else {
+                console.log("\nWe don't have that product in that quantity");
+            }
         });
-};
+}
 
+function pullTrigger(item, quantity) {
+    connection.query(
+        "UPDATE products SET stock_quantity = stock_quantity - ? WHERE item_id = ?",
+        [quantity, item],
+        function (err, res) {
+            if (err) throw err;
+            console.log("\nYour order has been placed");
+            glutton();
+        }
+    );
+}
+
+function glutton() {
+    inquirer
+        .prompt([
+            {
+            type: "input",
+            name: "restart",
+            message: "Would you like to make another purchase? Press any key for yes, type 'I HATE AMERICA' to quit"
+            }
+        ])
+        .then(function (answer) {
+            if (answer.restart === "I HATE AMERICA") {
+                console.log("\nShame on you!");
+                process.exit(0);
+            }
+            else {
+                start();
+            }
+        });
+}
