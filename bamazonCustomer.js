@@ -44,7 +44,8 @@ function prompt(inventory) {
                 pullTrigger(itemId, itemQ);
             }
             else {
-                console.log("\nWe don't have that product in that quantity");
+                console.log("\nWe don't have that product in that quantity.");
+                glutton();
             }
         });
 }
