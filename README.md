@@ -19,3 +19,5 @@ MySQL
 
 ### ToDo
 - Better input validation
+
+* The tuffest challenge with bamazon was incorporating and understanding how different parts of a tech stack work. Key to overcoming this obstacle was developing a good quick break - fix pattern. Remembering to return to a known state, and approach any issues with small reproduceable tests. 
